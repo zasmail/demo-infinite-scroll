@@ -19,22 +19,28 @@ function renderTemplate(template, res) {
   return results;
 }
 
-function scrolledNearBottom(el, offset) {
-  if(window.innerHeight < offset){
-    return (el.scrollHeight - el.scrollTop) < offset;
-  } else{
-    return (el.scrollHeight - el.scrollTop) < window.innerHeight* 2;
-  }
+function scrolledNearBottom(contentHeight, containerHeight, scrollTop, offset) {
+  return (contentHeight - scrollTop - containerHeight) < offset;
+}
+
+function isSearchTriggered(offset) {
+  var body = document.querySelector('#right-column');
+  return scrolledNearBottom(
+    body.clientHeight,
+    document.documentElement.clientHeight,
+    body.scrollTop || document.documentElement.scrollTop,
+    offset
+  );
 }
 
 function searchNewRecords() {
-  if (scrolledNearBottom(document.querySelector('body'), this.offset)) {
+  if (isSearchTriggered(this.offset)) {
     addSearchedRecords.call(this);
   }
 }
 
 function browseNewRecords() {
-  if (scrolledNearBottom(document.querySelector('body'), this.offset)) {
+  if (isSearchTriggered(this.offset)) {
     addBrowsedRecords.call(this);
   }
 }
@@ -59,8 +65,8 @@ function appendSearchResults(err, res, state) {
 
   if (page === nbPages - 1 && (this.args.results.nbHits > nbPages * this.args.results.hitsPerPage)) {
     index = helper.client.initIndex(this.args.state.index);
-    window.removeEventListener('scroll', searchNewRecords.bind(this));
-    window.addEventListener('scroll', browseNewRecords.bind(this));
+    document.querySelector('#right-column').removeEventListener('scroll', searchNewRecords.bind(this));
+    document.querySelector('#right-column').addEventListener('scroll', browseNewRecords.bind(this));
     addBrowsedRecords.call(this);
   }
 }
@@ -68,8 +74,12 @@ function appendSearchResults(err, res, state) {
 function addBrowsedRecords() {
   if (!loading) {
     loading = true;
+    // Skip the 1000 first hits
     if (!cursor) {
-      index.browse(this.args.state.query, {page: 0, hitsPerPage: 20}, appendBrowsedResults.bind(this));
+      index.browse(this.args.state.query, {
+        page: 1000 / 20 + 1,
+        hitsPerPage: 20
+      }, appendBrowsedResults.bind(this));
     } else {
       index.browseFrom(cursor, appendBrowsedResults.bind(this));
     }
@@ -130,11 +140,19 @@ function infiniteScrollWidget(options) {
         offset: offset
       };
 
-      if (args.results.nbHits) {
-        window.addEventListener('scroll', searchNewRecords.bind(scope));
-      }
-
       initialRender(container, args, templates);
+
+      if (args.results.nbHits) {
+        var bodyHeight = document.querySelector('body').clientHeight;
+        var pageHeight = document.documentElement.clientHeight;
+
+        if (bodyHeight < pageHeight) {
+          searchNewRecords.call(scope);
+        }
+
+        document.querySelector('#right-column').addEventListener('scroll', searchNewRecords.bind(scope));
+        // window.addEventListener('scroll', searchNewRecords.bind(scope));
+      }
     }
   };
 }

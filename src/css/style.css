@@ -14,6 +14,7 @@ header, main, #no-results, footer {
 
 main {
   min-height: 360px;
+  height: 1106px;
 }
 
 #left-column {
@@ -24,6 +25,8 @@ main {
 #right-column {
   width: 74%;
   margin-left: 26%;
+  overflow-y: scroll;
+  height: 100%;
 }
 
 .clear:after {
@@ -100,6 +103,9 @@ header img {
 
 .ais-hits--item {
   display: inline;
+}
+.hits{
+  height: 1200px;
 }
 
 .hit {
@@ -325,7 +331,7 @@ a.clear-all:hover {
 /* FOOTER */
 footer {
   font-size: 14px;
-  margin-top: 200px;
+  margin-top: 50px;
   margin-bottom: 24px;
   text-align: center;
 }
@@ -338,4 +344,14 @@ footer a {
 footer a:hover {
   text-decoration: underline;
   color: #ed5565;
+}
+
+.footer {
+  width: 100%;
+  border-top: 2px solid #eee;
+}
+
+.footer-element{
+  display: inline-block;
+  margin-right: 20px;
 }
